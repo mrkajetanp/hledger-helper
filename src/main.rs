@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use clap::{Parser, Subcommand};
 
-use hledger_helper::from_csv;
+use hledger_helper::*;
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -43,7 +43,8 @@ fn main() {
         Commands::CSV {
             path,
         } => {
-            from_csv(&path);
+            let statement = BankStatement::from_csv(&path, StatementType::ClCardCSV).unwrap();
+            println!("{}", statement);
         }
     }
 }
