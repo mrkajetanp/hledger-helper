@@ -49,6 +49,7 @@ fn main() {
         } => {
             let st_type = match statement_type.to_lowercase().as_str() {
                 "clcard" => StatementType::ClCardCSV,
+                "chase" => StatementType::ChaseCSV,
                 _ => StatementType::Unknown,
             };
 
