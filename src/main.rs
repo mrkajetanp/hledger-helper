@@ -27,6 +27,9 @@ enum Commands {
     CSV {
         #[arg(value_name = "PATH")]
         path: String,
+
+        #[arg(value_name = "STATEMENT_TYPE")]
+        statement_type: String,
     }
 }
 
@@ -42,8 +45,16 @@ fn main() {
 
         Commands::CSV {
             path,
+            statement_type,
         } => {
-            let statement = BankStatement::from_csv(&path, StatementType::ClCardCSV).unwrap();
+            let st_type = match statement_type.to_lowercase().as_str() {
+                "clcard" => StatementType::ClCardCSV,
+                _ => StatementType::Unknown,
+            };
+
+            let statement = BankStatement::from_csv(
+                &path, st_type
+            ).unwrap();
             println!("{}", statement);
         }
     }

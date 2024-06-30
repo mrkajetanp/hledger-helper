@@ -1,14 +1,16 @@
+use core::panic;
 use std::io::BufReader;
 use std::fs::File;
 use std::fmt;
 
-static GROCERIES: &str = "Expenses:Groceries";
-static ALCOHOL: &str = "Expenses:Alcohol";
-static EATING_OUT: &str = "Expenses:Eating Out";
+mod utils;
+mod tokens;
+use crate::tokens::*;
 
 #[derive(Copy, Clone)]
 pub enum StatementType {
     ClCardCSV,
+    Unknown,
 }
 
 #[derive(Debug)]
@@ -27,7 +29,7 @@ impl BankStatement {
         }).collect();
 
         Some(BankStatement {
-            transactions: transactions,
+            transactions,
         })
     }
 }
@@ -65,6 +67,9 @@ impl LedgerEntry {
                     source: "Assets:Crypto:CL:LTC".to_string(),
                     source_amount: "".to_string(),
                 }
+            },
+            StatementType::Unknown => {
+                panic!();
             }
         }
     }
@@ -75,7 +80,11 @@ impl fmt::Display for LedgerEntry {
         let source_space = "";
         let source_amount = self.source_amount.to_uppercase();
 
-        let destination = if self.destination.is_empty() { name_to_destination(&self.name) } else { self.destination.clone() };
+        let destination = if self.destination.is_empty() {
+            name_to_destination(&self.name)
+        } else {
+            self.destination.clone()
+        };
         let destination_space = " ".repeat(40 - 4 - destination.len());
         let destination_amount = self.destination_amount.to_uppercase();
 
@@ -106,50 +115,4 @@ struct CLCardRow<'a> {
     ecb_exchange_rate: &'a str,
     markup: &'a str,
     source: &'a str,
-}
-
-fn capitalize(s: &str) -> String {
-    let mut c = s.chars();
-    match c.next() {
-        None => String::new(),
-        Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
-    }
-}
-
-fn name_to_destination(name: &str) -> String {
-    match name {
-        "Iceland" |
-        "Aldi" |
-        "Ryman"
-        => GROCERIES,
-
-        "McTucky's"
-        => EATING_OUT,
-
-        "On Bar Manchester" |
-        "Brewdog Man Doghouse"
-        => ALCOHOL,
-
-        _ => "Expenses:",
-     }.to_string()
-}
-
-fn process_name(name: &str) -> String {
-    let mut name_parts: Vec<String> = name.split(' ').filter(|&x| !x.is_empty())
-        .map(|x| capitalize(&x.to_lowercase())).collect();
-    name_parts.pop();
-    name_parts.pop();
-
-    let mut name = name_parts.join(" ");
-
-    if name.starts_with("Crv*") {
-        name = capitalize(&name[4..name.len()-7]);
-    }
-
-    match name.as_str() {
-        "Mctuckys"
-        => "McTucky's",
-
-        _ => &name,
-    }.to_string()
 }
